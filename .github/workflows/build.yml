@@ -37,12 +37,13 @@ jobs:
       run: echo "$BUILD_NUMBER" > work/BUILD_NUMBER
     - name: Embed build number into code
       run: echo "$BUILD_NUMBER" > ./VERSION
-    - run: ls -Rla ~/
     - run: ~/go/bin/govvv build -pkg github.com/tarosky/gutenberg-cflog/cflog -o work/cflog lambda/lambda.go
+    - run: zip -j cflog.zip ./cflog
+      working-directory: work
     - uses: actions/upload-artifact@v2
       with:
         name: artifact
-        path: work/cflog
+        path: work/cflog.zip
     - uses: actions/upload-artifact@v2
       with:
         name: build-number
