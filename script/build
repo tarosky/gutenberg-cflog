@@ -1,0 +1,3 @@
+#!/bin/bash -eux
+
+exec govvv build -pkg github.com/tarosky/gutenberg-cflog/cflog -o work/cflog cli/cli.go
