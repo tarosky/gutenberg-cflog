@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -63,6 +66,7 @@ func newEnvironment(
 	ctx context.Context,
 	log *zap.Logger,
 	region, keys, commonPrefix string,
+	samplingPercent float64,
 ) *environment {
 	awsConfig := createAWSConfig(ctx, region)
 
@@ -71,9 +75,10 @@ func newEnvironment(
 		s3Client:  s3.NewFromConfig(*awsConfig),
 		log:       log,
 		config: &cflog.Config{
-			Log:          log,
-			OutputFields: cflog.ParseOutputFields(keys),
-			CommonPrefix: commonPrefix,
+			Log:             log,
+			OutputFields:    cflog.ParseOutputFields(keys),
+			CommonPrefix:    commonPrefix,
+			SamplingPercent: samplingPercent,
 		},
 	}
 }
@@ -116,13 +121,30 @@ func HandleRequest(ctx context.Context, task Task) error {
 	return lastErr
 }
 
+func readEnvFloat64(key string, defaultValue float64) float64 {
+	s := os.Getenv(key)
+	if s == "" {
+		return defaultValue
+	}
+
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
+}
+
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	env = newEnvironment(
 		context.Background(),
 		cflog.CreateLogger([]string{"stderr"}),
 		os.Getenv("REGION"),
 		os.Getenv("KEYS"),
-		os.Getenv("COMMON_PREFIX"))
+		os.Getenv("COMMON_PREFIX"),
+		readEnvFloat64("SAMPLING_PERCENT", 100.0))
 
 	lambda.Start(HandleRequest)
 }
