@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io"
+	"math/rand"
 	"net/url"
 	"strconv"
 	"strings"
@@ -68,9 +69,10 @@ func CreateLogger(logPaths []string) *zap.Logger {
 }
 
 type Config struct {
-	Log          *zap.Logger
-	OutputFields map[string]string
-	CommonPrefix string // CommonPrefix must end with "/"
+	Log             *zap.Logger
+	OutputFields    map[string]string
+	CommonPrefix    string // CommonPrefix must end with "/"
+	SamplingPercent float64
 }
 
 func Scan(gzreader io.Reader, c *Config) error {
@@ -84,6 +86,10 @@ func Scan(gzreader io.Reader, c *Config) error {
 	sc.Scan() // #Fields:
 	keys := strings.Split(sc.Text()[headerKeyLen:], " ")
 	for sc.Scan() {
+		if c.SamplingPercent <= rand.Float64()*100 {
+			continue
+		}
+
 		m := make(map[string]interface{}, len(keys))
 		var date, time string
 		for i, val := range strings.Split(sc.Text(), "\t") {

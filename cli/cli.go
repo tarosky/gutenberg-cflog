@@ -1,7 +1,9 @@
 package main
 
 import (
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/tarosky/gutenberg-cflog/cflog"
 	"github.com/urfave/cli/v2"
@@ -22,6 +24,11 @@ func main() {
 			Aliases:  []string{"cp"},
 			Required: true,
 		},
+		&cli.Float64Flag{
+			Name:    "sampling-percent",
+			Aliases: []string{"s"},
+			Value:   100.0,
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
@@ -37,10 +44,13 @@ func main() {
 		}
 
 		config := &cflog.Config{
-			Log:          log,
-			OutputFields: of,
-			CommonPrefix: c.String("common-prefix"),
+			Log:             log,
+			OutputFields:    of,
+			CommonPrefix:    c.String("common-prefix"),
+			SamplingPercent: c.Float64("sampling-percent"),
 		}
+
+		rand.Seed(time.Now().UnixNano())
 
 		cflog.Scan(f, config)
 
