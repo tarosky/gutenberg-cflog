@@ -1,3 +1,7 @@
 #!/bin/bash -eux
 
-exec govvv build -pkg github.com/tarosky/gutenberg-cflog/cflog -o work/cflog cli/cli.go
+exec go build \
+  -ldflags '-X github.com/tarosky/gutenberg-cflog/cflog.Version=develop' \
+  -tags lambda.norpc \
+  -o work/cflog \
+  cli/cli.go

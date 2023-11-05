@@ -1,9 +1,7 @@
 package main
 
 import (
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/tarosky/gutenberg-cflog/cflog"
 	"github.com/urfave/cli/v2"
@@ -49,8 +47,6 @@ func main() {
 			CommonPrefix:    c.String("common-prefix"),
 			SamplingPercent: c.Float64("sampling-percent"),
 		}
-
-		rand.Seed(time.Now().UnixNano())
 
 		cflog.Scan(f, config)
 

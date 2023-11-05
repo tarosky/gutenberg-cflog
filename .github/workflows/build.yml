@@ -14,7 +14,7 @@ env:
   AWS_ACCOUNT_ID: '013230744746'
   RELEASE_ACCESS_KEY_ID: AKIAQGFE5ESVNZ6MPQWV
   REPO_BUCKET: gutenberg-ext-cflog-repobucket-1k2dvzckylerk
-  GO_VERSION: 1.18.2
+  GO_VERSION: 1.21.3
 
 jobs:
   build:
@@ -24,8 +24,6 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: '~${{env.GO_VERSION}}'
-    - run: go get github.com/ahmetb/govvv
-    - run: go install github.com/ahmetb/govvv
     - name: Generate build number
       uses: einaregilsson/build-number@v3
       with:
@@ -37,8 +35,16 @@ jobs:
       run: echo "$BUILD_NUMBER" > work/BUILD_NUMBER
     - name: Embed build number into code
       run: echo "$BUILD_NUMBER" > ./VERSION
-    - run: ~/go/bin/govvv build -pkg github.com/tarosky/gutenberg-cflog/cflog -o work/cflog lambda/lambda.go
-    - run: zip -j cflog.zip ./cflog
+    - run: >
+        go build
+        -ldflags "-X github.com/tarosky/gutenberg-cflog/cflog.Version=$BUILD_NUMBER"
+        -tags lambda.norpc
+        -o work/bootstrap
+        lambda/lambda.go
+      env:
+        GOARCH: amd64
+        GOOS: linux
+    - run: zip -j cflog.zip ./bootstrap
       working-directory: work
     - uses: actions/upload-artifact@v2
       with:
@@ -78,11 +84,11 @@ jobs:
       with:
         upload_url: ${{steps.create_release.outputs.upload_url}}
         asset_path: ./cflog.zip
-        asset_name: cflog.build-${{env.BUILD_NUMBER}}-awslambda-go1x.zip
+        asset_name: cflog.build-${{env.BUILD_NUMBER}}-awslambda-provided-amd64.zip
         asset_content_type: application/octet-stream
     - uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{env.RELEASE_ACCESS_KEY_ID}}
         aws-secret-access-key: ${{secrets.AWS_RELEASE_SECRET_ACCESS_KEY}}
         aws-region: ap-northeast-1
-    - run: aws s3 cp ./cflog.zip s3://$REPO_BUCKET/cflog.build-${{env.BUILD_NUMBER}}-awslambda-go1x.zip
+    - run: aws s3 cp ./cflog.zip s3://$REPO_BUCKET/cflog.build-${{env.BUILD_NUMBER}}-awslambda-provided-amd64.zip
