@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"math/rand"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -136,8 +134,6 @@ func readEnvFloat64(key string, defaultValue float64) float64 {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	env = newEnvironment(
 		context.Background(),
 		cflog.CreateLogger([]string{"stderr"}),
