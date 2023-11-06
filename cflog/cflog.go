@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// Provided by govvv at compile time
+// Provided at compile time
 var Version string
 
 const headerKeyLen = len("#Fields: ")
